@@ -1,16 +1,21 @@
+# Use Node 18 Alpine image
 FROM node:18-alpine
 
 WORKDIR /app
 
+# Set NPM registry explicitly (bypass any bad default)
+RUN npm config set registry https://registry.npmjs.org/
+
+# Copy package files
 COPY package*.json ./
 
-RUN rm -f ~/.npmrc && \
-    npm config set registry https://registry.npmjs.org/ && \
-    npm set audit false && \
-    npm install
+# Install dependencies
+RUN npm install
 
+# Copy the rest of the application
 COPY . .
 
+# Build the application
 RUN npm run build
 
 EXPOSE 3000
