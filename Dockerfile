@@ -1,18 +1,16 @@
-# Use Node 18 Alpine image
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+RUN rm -f ~/.npmrc && \
+    npm config set registry https://registry.npmjs.org/ && \
+    npm set audit false && \
+    npm install
 
-# Copy the rest of the application
 COPY . .
 
-# Build the application
 RUN npm run build
 
 EXPOSE 3000
