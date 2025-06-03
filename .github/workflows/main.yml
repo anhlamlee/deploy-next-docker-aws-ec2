@@ -17,62 +17,40 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.REGION }}
 
-      - name: Send deploy command via SSM
-        id: send_command
+      - name: Deploy to EC2 using SSM
+        id: deploy_ssm
         run: |
           COMMAND_ID=$(aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --comment "Deploy React app" \
             --parameters commands='
+              git config --global --add safe.directory /home/ubuntu/downloads/deploy-next-docker-aws-ec2 &&
               cd /home/ubuntu/downloads/deploy-next-docker-aws-ec2 &&
               git fetch origin &&
               git checkout production &&
               git reset --hard origin/production &&
               docker build -t blog-starter . &&
-              docker stop blog-starter-container || true &&
-              docker rm blog-starter-container || true &&
+              docker rm -f blog-starter-container || true &&
               docker run -d --name blog-starter-container -p 80:3000 blog-starter
             ' \
             --region ${{ secrets.REGION }} \
-            --output json | jq -r '.Command.CommandId')
+            --query "Command.CommandId" --output text)
 
-          echo "CommandId=$COMMAND_ID" >> $GITHUB_OUTPUT
+          echo "Run COMMAND_ID=$COMMAND_ID"
 
-      - name: Wait for command to finish and check status
-        run: |
-          COMMAND_ID=${{ steps.send_command.outputs.CommandId }}
-          INSTANCE_ID=${{ secrets.EC2_INSTANCE_ID }}
-          REGION=${{ secrets.REGION }}
-
-          echo "Checking status of command $COMMAND_ID on instance $INSTANCE_ID"
-
-          for i in {1..30}; do
-            STATUS=$(aws ssm list-command-invocations \
-              --command-id $COMMAND_ID \
-              --instance-id $INSTANCE_ID \
-              --details \
-              --region $REGION \
-              --output json | jq -r '.CommandInvocations[0].Status')
-
+          for i in {1..10}; do
+            STATUS=$(aws ssm list-command-invocations --command-id $COMMAND_ID --details --query "CommandInvocations[0].Status" --output text)
             echo "Attempt $i: Status = $STATUS"
-
             if [[ "$STATUS" == "Success" ]]; then
-              echo "Command succeeded!"
+              echo "Command succeeded"
               exit 0
             elif [[ "$STATUS" == "Failed" || "$STATUS" == "Cancelled" || "$STATUS" == "TimedOut" ]]; then
               echo "Command failed with status $STATUS"
-              aws ssm list-command-invocations \
-                --command-id $COMMAND_ID \
-                --instance-id $INSTANCE_ID \
-                --details \
-                --region $REGION \
-                --output json | jq -r '.CommandInvocations[0].CommandPlugins[] | "\(.Name): \(.Output)"'
               exit 1
             fi
-
             sleep 10
           done
 
-          echo "Command did not complete within expected time"
+          echo "Command did not complete in time"
           exit 1
