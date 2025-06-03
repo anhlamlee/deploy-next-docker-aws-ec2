@@ -27,7 +27,7 @@ jobs:
               cd /home/ubuntu/downloads/deploy-next-docker-aws-ec2 &&
               git fetch origin &&
               git checkout production &&
-              git pull &&
+              git reset --hard origin/production &&
               docker build -t blog-starter . &&
               docker stop blog-starter-container || true &&
               docker rm blog-starter-container || true &&
