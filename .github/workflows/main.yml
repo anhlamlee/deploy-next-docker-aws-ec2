@@ -25,8 +25,11 @@ jobs:
             --comment "Deploy React app" \
             --parameters commands='
               cd /home/ubuntu/downloads/deploy-next-docker-aws-ec2 &&
-              git pull origin production &&
-              docker compose down &&
-              docker compose up -d --build
+              git fetch origin &&
+              git checkout production &&
+              docker build -t blog-starter . &&
+              docker stop blog-starter-container || true &&
+              docker rm blog-starter-container || true &&
+              docker run -d --name blog-starter-container -p 80:3000 blog-starter
             ' \
             --region ${{ secrets.REGION }}
