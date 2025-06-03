@@ -1,0 +1,32 @@
+name: Deploy React app on EC2
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.REGION }}
+
+      - name: Deploy to EC2 using SSM
+        run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceIds,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+            --comment "Deploy React app" \
+            --parameters commands='
+              cd /home/ubuntu/downloads/deploy-next-docker-aws-ec2 &&
+              git pull origin production &&
+              docker compose down &&
+              docker compose up -d --build
+            ' \
+            --region ${{ secrets.REGION }}
