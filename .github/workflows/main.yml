@@ -21,7 +21,7 @@ jobs:
         run: |
           aws ssm send-command \
             --document-name "AWS-RunShellScript" \
-            --targets "Key=instanceIds,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+            --targets "Key=InstanceIds,Values=${{ secrets.EC2_INSTANCE_ID }}" \
             --comment "Deploy React app" \
             --parameters commands='
               cd /home/ubuntu/downloads/deploy-next-docker-aws-ec2 &&
