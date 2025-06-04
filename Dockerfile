@@ -9,7 +9,7 @@ COPY package*.json ./
 
 # Install dependencies
 # RUN npm install
-RUN npm install --legacy-peer-deps --no-audit --no-fund
+RUN npm install
 
 # Copy the rest of the application ( copy toàn bộ mã nguồn còn lại vào app)
 COPY . .
