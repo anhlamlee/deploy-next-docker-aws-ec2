@@ -18,7 +18,7 @@ const Alert = ({ preview }: Props) => {
         <div className="py-2 text-center text-sm">
           {preview ? (
             <>
-              This papa new is a preview.{" "}
+              This mom is a preview.{" "}
               <a
                 href="/api/exit-preview"
                 className="underline hover:text-teal-300 duration-200 transition-colors"
