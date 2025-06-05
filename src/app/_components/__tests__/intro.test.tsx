@@ -9,7 +9,7 @@ describe('Intro Component', () => {
 
   it('contains the main heading text', () => {
     const { getByText } = render(<Intro />);
-    const heading = getByText('hanh phuc biet bao sướng quá one more');
+    const heading = getByText('hanh phuc biet bao one more time');
     expect(heading).toBeTruthy();
   });
 
